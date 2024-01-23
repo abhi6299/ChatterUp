@@ -42,7 +42,7 @@ io.on('connection',(socket)=>{
             })
     })
 
-    socket.on('typing', data=>{
+    socket.on('typing', data=>{ 
         console.log(data);
         socket.broadcast.emit('typing', data);
     });

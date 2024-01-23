@@ -4,6 +4,6 @@ export const chatSchema = new mongoose.Schema({
     username:String,
     profile:String,
     text:String,
-    timestamp:Date
+    timestamp:Date 
 })
 export const chatModel = mongoose.model('chats',chatSchema);
