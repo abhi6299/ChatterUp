@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>ChatterUp</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='./main.css'>
+    <!-- <script src='main.js'></script> -->
+</head>
+<body>
+    <div id="login">
+        <h1>Please login to continue</h1>
+        <form>
+            <input type="text" id="name">
+            <button type="submit" id="post">Post</button>
+        </form>
+    </div>
+    <div id="loggedIn">
+        <h1>LoggedIn! Thank you, Enjoy you chat </h1>
+    </div>
+    <div id="outer">
+        <!-- <h1>HI</h1> -->
+        <div id="header">
+            <!-- <span class="in-header">Welcome xyz</span> -->
+            <!-- <span class="in-header">Welcome xyz</span>
+            <span class="in-header">Welcome xyz</span>
+            <span class="in-header">Welcome xyz</span>
+            <span class="in-header">Welcome xyz</span> -->
+            <!-- <span class="in-header">Welcome xyz</span> -->
+        </div>
+        <div id="main">
+            <div class="submain">
+                    <div class="randomImageDiv" >
+                    <img id="profileImg" src="./profiles/01.jpg">
+                </div>
+                <div class="outer-box">
+                    <div class="details">
+                        <span class="x1">abc</span>
+                        <span class="x2">12.00</span>
+                    </div>
+                    <div class="text">Just testing</div>
+                </div>
+                
+            </div>
+                <div class="submain-second">
+                    <div class="outer-box-second">
+                        <div class="details-second">
+                            <span class="x1">xyz</span>
+                            <span class="x2">12.00</span>
+                        </div>
+                        <div class="text-second">just testing</div>
+                    </div>
+                    <div class="randomImageDiv" >
+                        <img id="profileImg" src="./profiles/01.jpg">
+                    </div>
+                </div>
+        </div>
+        <div id="input-section">
+            <input type="text" id="chat-msg" placeholder="Enter yout text">
+            <button type="submit" id="send-chat">Send</button>
+        </div>
+            <div id="foot">Connected users: <span id="clients">0</span></div>
+        <div id="footer">
+            <!-- <div id="in-footer">Abhinav</div> -->
+
+        </div>
+        <audio id="notificationSound">
+            <source src="notification.mp3" type="audio/mpeg"> <!-- Replace 'notification.mp3' with your audio file -->
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io.connect('http://localhost:3000');
+        // alert('Please login and then continue :)')
+        //Top section 
+        const username = document.getElementById('name');
+        const userBtn = document.getElementById('post');
+        const notificationSound = document.getElementById('notificationSound');
+        userBtn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            if(username.value==''){
+                alert('Please enter you name to post')
+            }else{
+                const loginBox = document.getElementById('login');
+                const loggedIn = document.getElementById('loggedIn');
+                loginBox.style.display='none';
+                loggedIn.style.display='block';
+                // console.log(username.value);
+                socket.emit('username', username.value);
+            }
+        })
+        socket.on('updateUsername',username=>{
+            // Header - adding name
+            const name = document.createElement('span');
+            name.classList.add('in-header'); // Use classList.add() to add a class
+            name.style.fontWeight='bold';
+            name.style.borderRight='2px solid black';
+            const circle = document.createElement('span');
+            circle.classList.add('circle');
+            name.innerHTML = `Welcome ${username} :)`;
+            const header = document.getElementById('header');
+            header.appendChild(circle);
+            header.appendChild(name);
+        })
+        socket.on('headerAndFooter',(data)=>{
+            if(username.value!=''){
+            const names=data.names;
+            const num_of_clients = data.length;
+            // console.log(names);
+            // console.log(username);
+            // console.log(num_of_clients);
+
+            // //Footer - adding active user
+            const footer = document.getElementById('footer');
+            const clients = document.getElementById('clients');
+            while (footer.firstChild) {
+                footer.removeChild(footer.firstChild);
+            }
+            clients.innerHTML='';
+            clients.innerHTML=`${num_of_clients}`;
+            names.forEach(element=>{
+                const temp = document.createElement('div');
+                temp.innerHTML = `<div class="in-footer">
+                                    <span class="circle-footer"></span>
+                                    <span>${element}</span>
+                                </div>`;
+                footer.appendChild(temp.firstChild);
+            })
+        }
+        })
+        const inputChat = document.getElementById('chat-msg');
+        inputChat.addEventListener('input', () => {
+            socket.emit('typing', username.value);
+        });
+        inputChat.addEventListener('blur', () => {
+            socket.emit('stoppedTyping', username.value);
+        });
+
+        socket.on('typing', (data) => {
+            const header = document.getElementById('header');
+            const spans = header.querySelectorAll('.in-header');
+            spans.forEach(span => {
+                if (span.textContent === `${data} is typing`) {
+                    span.remove(); // This will remove only the span element
+                }else{
+                    const name = document.createElement('span');
+                    name.classList.add('in-header'); // Use classList.add() to add a class
+                    name.innerHTML = `${data} is typing`;
+                    name.style.fontStyle='italics';
+                    header.appendChild(name);
+                }
+            });
+        });
+        socket.on('stoppedTyping',(data)=>{
+            const header = document.getElementById('header');
+            const spans = header.querySelectorAll('.in-header');
+            spans.forEach(span => {
+                if (span.textContent === `${data} is typing`) {
+                    span.remove(); // This will remove only the span element
+                }
+            });
+        })
+
+        const sendBtn = document.getElementById('send-chat');
+        sendBtn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            if(username.value!=''){
+                const imagePaths = ['./profiles/01.jpg', './profiles/02.jpg', './profiles/03.jpg', './profiles/04.jpg', './profiles/05.jpg', './profiles/06.jpg', './profiles/07.jpg', './profiles/08.jpg'];
+                // Get a random index within the imagePaths array length
+                const randomIndex = Math.floor(Math.random() * imagePaths.length);
+                socket.emit('new-msg',{input: inputChat.value,profile:imagePaths[randomIndex]});
+
+                const main = document.getElementById('main');
+                const outerBox = document.createElement('div');
+                // outerBox.classList.add('outer-box');
+                outerBox.classList.add('submain-second');
+                outerBox.innerHTML = `<div class="outer-box-second">
+                                <div class="details-second">
+                                    <span class="x1">${username.value}</span>
+                                    <span class="x2">${new Date().toDateString()}</span>
+                                </div>
+                                <div class="text-second">${inputChat.value}</div>
+                            </div>
+                            <div class="randomImageDiv" >
+                                <img id="profileImg" src="${imagePaths[randomIndex]}">
+                            </div>`
+                main.appendChild(outerBox)
+                inputChat.value='';
+                //add it to the chat section
+            }
+        })
+        function playNotificationSound() {
+        // Play a sound for the notification
+        const audio = new Audio('notification.mp3');
+        audio.play();
+        }
+        socket.on('broadcast-new-message',async(data)=>{
+            //add it to the chat section
+            // await notificationSound.play();
+            playNotificationSound();
+            const main = document.getElementById('main');
+                const outerBox = document.createElement('div');
+                outerBox.classList.add('submain');
+                // outerBox.classList.add('outer-box-user');
+                outerBox.innerHTML =`<div class="randomImageDiv" >
+                                        <img id="profileImg" src="${data.profile}">
+                                    </div>
+                                    <div class="outer-box">
+                                        <div class="details">
+                                            <span class="x1">${data.username}</span>
+                                            <span class="x2">${new Date(data.timestamp).toDateString()}</span>
+                                        </div>
+                                        <div class="text">${data.text}</div>
+                                    </div>`
+                main.appendChild(outerBox)
+        })
+        socket.on('broadcast-prev-message',(data)=>{
+            //add it to the chat section
+            const main = document.getElementById('main');
+            data.forEach(ele=>{
+                if(ele.username === username.value){
+                    const outerBox = document.createElement('div');
+                    outerBox.classList.add('submain-second');
+                // outerBox.classList.add('outer-box-user');
+                    outerBox.innerHTML =`<div class="outer-box-second">
+                                            <div class="details-second">
+                                                <span class="x1">${ele.username}</span>
+                                                <span class="x2">${new Date(ele.timestamp).toDateString()}</span>
+                                            </div>
+                                            <div class="text-second">${ele.text}</div>
+                                        </div>
+                                        <div class="randomImageDiv" >
+                                            <img id="profileImg" src="${ele.profile}">
+                                        </div>`
+                    main.appendChild(outerBox)
+                }else{
+                    const outerBox = document.createElement('div');
+                    outerBox.classList.add('submain');
+                // outerBox.classList.add('outer-box-user');
+                    outerBox.innerHTML =`<div class="randomImageDiv" >
+                                        <img id="profileImg" src="${ele.profile}">
+                                    </div>
+                                    <div class="outer-box">
+                                        <div class="details">
+                                            <span class="x1">${ele.username}</span>
+                                            <span class="x2">${new Date(ele.timestamp).toDateString()}</span>
+                                        </div>
+                                        <div class="text">${ele.text}</div>
+                                    </div>`
+                    main.appendChild(outerBox)
+                }
+            })
+        })
+    </script>
+
+
+</body>
+</html>
